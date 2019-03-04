@@ -923,3 +923,11 @@
 	build_path = /obj/item/golem_shell
 	category = list("Imported")
 
+/datum/design/player_vendor
+	name = "Machine Board (uVend Vendor)"
+	id = "uvend"
+	build_type = AUTOLATHE
+	materials = list(MAT_GLASS = 750, MAT_METAL = 250)
+	build_path = /obj/item/circuitboard/player_vendor
+	category = list("initial", "Electronics")
+
