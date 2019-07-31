@@ -12,15 +12,20 @@
 	desc = "A strange device. Its function is not immediately apparent."
 	icon = 'icons/obj/assemblies.dmi'
 	origin_tech = "combat=1;plasmatech=1;powerstorage=1;materials=1"
+	icon_state = "shock_kit"
 	var/list/iconlist = list("shock_kit","armor-igniter-analyzer","infra-igniter0","infra-igniter1","radio-multitool","prox-radio1","radio-radio","timer-multitool0","radio-igniter-tank")
 	var/cooldownMax = 60
 	var/cooldown = FALSE
-	var/stability = 0
-	var/potency = 0
-	var/raritylevel = 0
+	// When spawned in, they'll have average (50) stats and an uncommon rarity level
+	var/stability = 50
+	var/potency = 50
+	var/raritylevel = RARITY_UNCOMMON
 	var/base_name = "Unknown"
 	var/extra_data
+	var/list/extra_data_list
 	var/box_type
+	// Is checked by some devices to make sure initialization is complete.
+	var/isinitialized = FALSE
 
 	var/list/keywords = list("clowns")
 	var/use_generated_names = TRUE
@@ -28,13 +33,13 @@
 
 	var/techLevels
 
-/obj/item/discovered_tech/New(var/stability_in, var/potency_in, var/rare_level, var/boxtype)
+/obj/item/discovered_tech/proc/setStats(var/stability_in, var/potency_in, var/rare_level, var/boxtype)
 	stability = stability_in
 	potency = potency_in
 	raritylevel = rare_level
+	box_type = boxtype
 	icon_state = pick(iconlist)
 	techLevels = raritylevel*2
-	box_type = boxtype
 	initialize()
 
 /obj/item/discovered_tech/attack_self(mob/user)
@@ -234,3 +239,116 @@
 	if(prob(100-(stability/2+15)))
 		to_chat(user, "<span class='warning'>[src] falls apart!</span>")
 		qdel(src)
+
+// Gene Power Granter
+// Grants up to 3 gene powers (rarity level+1) and a bunch of radiation. High potency and stability may result in gene stability issues.
+/obj/item/discovered_tech/gene_granter/initialize()
+	..()
+	origin_tech += "biotech=[4+rand(raritylevel,raritylevel+1)];"
+	keywords = list("enhancement", "biology")
+
+	var/adjpotency = potency + (raritylevel*30-30)
+	var/adjstability = stability + (raritylevel*30-30)
+	var/supplied_genes = raritylevel+1
+	var/list/obj/item/dnainjector/samples = new/list
+	extra_data_list = new/list
+
+	if(adjpotency >= 60)
+		samples.Add(
+			new/obj/item/dnainjector/hulkmut,
+			new/obj/item/dnainjector/telemut,
+			new/obj/item/dnainjector/xraymut,
+			new/obj/item/dnainjector/midgit
+		)
+	if(adjpotency >= 30 && adjpotency < 100)
+		samples.Add(
+			new/obj/item/dnainjector/firemut,
+			new/obj/item/dnainjector/nobreath,
+			new/obj/item/dnainjector/regenerate,
+			new/obj/item/dnainjector/runfast,
+			new/obj/item/dnainjector/morph,
+			new/obj/item/dnainjector/noprints,
+			new/obj/item/dnainjector/insulation
+		)
+	if(adjstability < 90)
+		samples.Add(
+			new/obj/item/dnainjector/glassesmut,
+			new/obj/item/dnainjector/clumsymut,
+			new/obj/item/dnainjector/hallucination,
+			new/obj/item/dnainjector/comic
+		)
+	if(adjstability < 60)
+		samples.Add(
+			new/obj/item/dnainjector/h2m,
+			new/obj/item/dnainjector/epimut,
+			new/obj/item/dnainjector/tourmut,
+			new/obj/item/dnainjector/blindmut,
+			new/obj/item/dnainjector/deafmut
+		)
+	// If no conditions are met, grants useless genes instead. There must be at least 3 possibilities.
+	if(samples.len < 3)
+		samples.Add(new/obj/item/dnainjector/stuttmut, new/obj/item/dnainjector/coughmut, new/obj/item/dnainjector/comic)
+
+	var/chosenGene
+	for(var/i = 1 to supplied_genes)
+		chosenGene = pick(samples)
+		extra_data_list.Add(chosenGene)
+		samples.Remove(chosenGene)
+
+/obj/item/discovered_tech/gene_granter/itemproc(mob/user)
+	if(!isinitialized)
+		initialize()
+	to_chat(user, "<span class='warning'>A small hypodermic needle shoots into you and injects something from a hidden reservoir!</span>")
+	playsound(loc, 'sound/goonstation/items/hypo.ogg', 80, 0)
+	warn_admins(user, "Gene Granter", 0)
+	if(!user.dna)
+		to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
+		qdel(src)
+		return
+	if(ishuman(user))
+		if(NO_DNA in user.dna.species.species_traits)
+			to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
+			qdel(src)
+			return
+	for(var/obj/item/dnainjector/I in extra_data_list)
+		I.inject(user, user)
+	qdel(src)
+
+// Transcendence Serum
+// DNA vault on steroids. Grants you most psychic powers as inherents that cannot be removed with mutadone. Very Rare, of course.
+/obj/item/discovered_tech/gene_transcendence_serum/initialize()
+	..()
+	origin_tech += "biotech=[4+rand(raritylevel,raritylevel+1)];"
+	keywords = list("enhancement", "biology")
+
+/obj/item/discovered_tech/gene_transcendence_serum/itemproc(mob/user)
+	// It'll behave in most ways like a gene granter when interacted with by a DNA-less pleb.
+	// It's probably best that they don't know what they missed out on.
+	to_chat(user, "<span class='warning'>A small hypodermic needle shoots into you and injects something from a hidden reservoir!</span>")
+	playsound(loc, 'sound/goonstation/items/hypo.ogg', 80, 0)
+	if(!user.dna)
+		to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
+		qdel(src)
+		return
+	if(ishuman(user))
+		if(NO_DNA in user.dna.species.species_traits)
+			to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
+			qdel(src)
+			return
+		to_chat(user, "<span class='notice'>You feel a massive surge of energy as your psionic abilities transcend mortal limits!</span>")
+		playsound(loc, 'sound/magic/teleport_app.ogg', 80, 0)
+		grant_power(user, XRAYBLOCK, XRAY)
+		grant_power(user, TELEBLOCK, TK)
+		grant_power(user, REMOTETALKBLOCK, REMOTE_TALK)
+		grant_power(user, REMOTEVIEWBLOCK, REMOTE_VIEW)
+		grant_power(user, EMPATHBLOCK, EMPATH)
+		grant_power(user, PSYRESISTBLOCK, PSY_RESIST)
+		qdel(src)
+
+/obj/item/discovered_tech/gene_transcendence_serum/proc/grant_power(mob/living/carbon/human/H, block, power)
+	if(!H.ignore_gene_stability)
+		H.ignore_gene_stability = 1
+	H.dna.SetSEState(block, 1, 1)
+	H.mutations |= power
+	genemutcheck(H, block, null, MUTCHK_FORCED)
+	H.dna.default_blocks.Add(block) //prevent removal by mutadone

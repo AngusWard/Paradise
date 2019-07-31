@@ -39,7 +39,8 @@
 
     // determine what specific type (itemtype) the item is based on.
 	loot_item = findItemType()
-	// name and describe the item unless the definition says not to.
+	loot_item.setStats(stability, potency, raritylevel, box_type)
+    // name and describe the item unless the definition says not to.
 	if(loot_item.use_generated_names)
 		loot_item.name = box_type + " [generateSecondName()][generateThirdName()]"
 	if(loot_item.use_generated_descriptions)
@@ -57,31 +58,39 @@
         if("Device")
             // Lists by rarity.
             if(raritylevel == RARITY_COMMON)
-                return pick(new/obj/item/discovered_tech/cleaner(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/smokebomb(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/floofcannon(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/teleport(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/nothing(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/rapidDuplicator(stability, potency, raritylevel, box_type))
+                return pick(
+                    new/obj/item/discovered_tech/cleaner(),
+                    new/obj/item/discovered_tech/smokebomb(),
+                    new/obj/item/discovered_tech/floofcannon(),
+                    new/obj/item/discovered_tech/teleport(),
+                    new/obj/item/discovered_tech/nothing(),
+                    new/obj/item/discovered_tech/gene_granter(),
+                    new/obj/item/discovered_tech/rapidDuplicator())
             if(raritylevel == RARITY_UNCOMMON)
-                return pick(new/obj/item/discovered_tech/teleport(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/rapidDuplicator(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/explosion(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/massSpawner(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/flashbang(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/cleaner(stability, potency, raritylevel, box_type))
+                return pick(
+                    new/obj/item/discovered_tech/teleport(),
+                    new/obj/item/discovered_tech/rapidDuplicator(),
+                    new/obj/item/discovered_tech/explosion(),
+                    new/obj/item/discovered_tech/massSpawner(),
+                    new/obj/item/discovered_tech/flashbang(),
+                    new/obj/item/discovered_tech/gene_granter(),
+                    new/obj/item/discovered_tech/cleaner())
             if(raritylevel == RARITY_RARE)
-                return pick(new/obj/item/discovered_tech/explosion(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/massSpawner(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/rapidDuplicator(stability, potency, raritylevel, box_type), 
-                new/obj/item/discovered_tech/flashbang(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/teleport(stability, potency, raritylevel, box_type))
+                return pick(
+                    new/obj/item/discovered_tech/explosion(),
+                    new/obj/item/discovered_tech/massSpawner(),
+                    new/obj/item/discovered_tech/rapidDuplicator(),
+                    new/obj/item/discovered_tech/flashbang(),
+                    new/obj/item/discovered_tech/gene_granter(),
+                    new/obj/item/discovered_tech/teleport())
             if(raritylevel == RARITY_VERYRARE)
-                return pick(new/obj/item/discovered_tech/teleport(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/explosion(stability, potency, raritylevel, box_type),
-                new/obj/item/discovered_tech/rapidDuplicator(stability, potency, raritylevel, box_type))
+                return pick(
+                    new/obj/item/discovered_tech/teleport(),
+                    new/obj/item/discovered_tech/explosion(),
+                    new/obj/item/discovered_tech/rapidDuplicator(),
+                    new/obj/item/discovered_tech/gene_transcendence_serum())
     // If there is no type applicable to the one provided, the experimentor will produce a useless item.
-    return new/obj/item/discovered_tech/nothing(stability, potency, raritylevel)
+    return new/obj/item/discovered_tech/nothing()
 
 //////////////////II. SECOND NAME////////////////////
 // Each revealed object has 3 parts to its name.
@@ -121,6 +130,10 @@
                 possiblenames.Add("Photonic ", "Modulated ", "Luminescent ", "Strobing ")
             if("clowns")
                 possiblenames.Add("Honk ", "Banana-", "Squeak-", "Murder-")
+            if("enhancement")
+                possiblenames.Add("Transcendent ", "Uplifting ")
+            if("biology")
+                possiblenames.Add("Cellular ", "Bio-", "Genetic ")
     return pick(possiblenames)
 
 
@@ -147,9 +160,10 @@
                 possiblenames.Add("Photon Manipulator", "Modulator", "Strobe")
             if("animals")
                 possiblenames.Add("Bio-Invigorator", "Cloner")
-    //If there are no names available for the chosen keywords, pick a generic name instead.
-    if(possiblenames.len<1)
-        return pick("Doohickey", "Thingummywhatsit", "Machine", "Tech")
+            if("enhancement")
+                possiblenames.Add("Potentiotron", "Reinventor")
+    if(possiblenames.len<3)
+        possiblenames.Add("Machine")
     return pick(possiblenames)
 
 //////////////////////// IV. DESCRIPTION //////////////////////////
