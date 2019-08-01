@@ -24,8 +24,10 @@
 	var/extra_data
 	var/list/extra_data_list
 	var/box_type
-	// Is checked by some devices to make sure initialization is complete.
+	// Is checked by devices that have more than origin tech and keywords in the init proc to make sure initialization is complete.
 	var/isinitialized = FALSE
+	// Used by one-use items to render them inactive.
+	var/used = FALSE
 
 	var/list/keywords = list("clowns")
 	var/use_generated_names = TRUE
@@ -108,6 +110,8 @@
 	extra_data = pick(/mob/living/simple_animal/pet/corgi, /mob/living/simple_animal/pet/cat, /mob/living/simple_animal/pet/fox, /mob/living/simple_animal/mouse, /mob/living/simple_animal/pet/pug, /mob/living/simple_animal/lizard, /mob/living/simple_animal/diona, /mob/living/simple_animal/butterfly, /mob/living/carbon/human/monkey)
 
 /obj/item/discovered_tech/floofcannon/itemproc(mob/user)
+	if(!isinitialized)
+		initialize()
 	playsound(src.loc, "sparks", rand(25,50), 1)
 	var/mob/living/C = new extra_data(get_turf(user))
 	C.throw_at(pick(oview(10,user)),10,rand(3,8))
@@ -252,6 +256,7 @@
 	var/supplied_genes = raritylevel+1
 	var/list/obj/item/dnainjector/samples = new/list
 	extra_data_list = new/list
+	var/chosenGene
 
 	if(adjpotency >= 60)
 		samples.Add(
@@ -270,12 +275,20 @@
 			new/obj/item/dnainjector/noprints,
 			new/obj/item/dnainjector/insulation
 		)
+	// If no conditions are met, grants useless genes instead. There must be at least 3 possibilities.
+	if(samples.len < 3)
+		samples.Add(new/obj/item/dnainjector/stuttmut, new/obj/item/dnainjector/coughmut, new/obj/item/dnainjector/comic)
+	//If good genes are available pick one (to ensure that every injection grants at least something good)
+	if(raritylevel >= RARITY_UNCOMMON)
+		chosenGene = pick(samples)
+		extra_data_list.Add(chosenGene)
+		samples.Remove(chosenGene)
+		supplied_genes -= 1
 	if(adjstability < 90)
 		samples.Add(
 			new/obj/item/dnainjector/glassesmut,
 			new/obj/item/dnainjector/clumsymut,
 			new/obj/item/dnainjector/hallucination,
-			new/obj/item/dnainjector/comic
 		)
 	if(adjstability < 60)
 		samples.Add(
@@ -285,56 +298,58 @@
 			new/obj/item/dnainjector/blindmut,
 			new/obj/item/dnainjector/deafmut
 		)
-	// If no conditions are met, grants useless genes instead. There must be at least 3 possibilities.
-	if(samples.len < 3)
-		samples.Add(new/obj/item/dnainjector/stuttmut, new/obj/item/dnainjector/coughmut, new/obj/item/dnainjector/comic)
-
-	var/chosenGene
 	for(var/i = 1 to supplied_genes)
 		chosenGene = pick(samples)
 		extra_data_list.Add(chosenGene)
 		samples.Remove(chosenGene)
 
 /obj/item/discovered_tech/gene_granter/itemproc(mob/user)
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now.</span>")
+		return
 	if(!isinitialized)
 		initialize()
 	to_chat(user, "<span class='warning'>A small hypodermic needle shoots into you and injects something from a hidden reservoir!</span>")
 	playsound(loc, 'sound/goonstation/items/hypo.ogg', 80, 0)
 	warn_admins(user, "Gene Granter", 0)
 	if(!user.dna)
-		to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
-		qdel(src)
+		to_chat(user, "<span class='notice'>...but it doesn't seem to do anything to you.</span>")
+		used = TRUE
 		return
 	if(ishuman(user))
 		if(NO_DNA in user.dna.species.species_traits)
-			to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
-			qdel(src)
+			to_chat(user, "<span class='notice'>...but it doesn't seem to do anything to you.</span>")
+			used = TRUE
 			return
 	for(var/obj/item/dnainjector/I in extra_data_list)
 		I.inject(user, user)
-	qdel(src)
+	used = TRUE
 
 // Transcendence Serum
 // DNA vault on steroids. Grants you most psychic powers as inherents that cannot be removed with mutadone. Very Rare, of course.
 /obj/item/discovered_tech/gene_transcendence_serum/initialize()
 	..()
-	origin_tech += "biotech=[4+rand(raritylevel,raritylevel+1)];"
-	keywords = list("enhancement", "biology")
+	origin_tech += "biotech=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("enhancement", "biology", "transformation")
 
 /obj/item/discovered_tech/gene_transcendence_serum/itemproc(mob/user)
 	// It'll behave in most ways like a gene granter when interacted with by a DNA-less pleb.
 	// It's probably best that they don't know what they missed out on.
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now.</span>")
+		return
 	to_chat(user, "<span class='warning'>A small hypodermic needle shoots into you and injects something from a hidden reservoir!</span>")
 	playsound(loc, 'sound/goonstation/items/hypo.ogg', 80, 0)
 	if(!user.dna)
-		to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
-		qdel(src)
+		to_chat(user, "<span class='notice'>...but it doesn't seem to do anything to you.</span>")
+		used=TRUE
 		return
 	if(ishuman(user))
 		if(NO_DNA in user.dna.species.species_traits)
-			to_chat(user, "<span class='notice'>But it doesn't seem to do anything...</span>")
-			qdel(src)
+			to_chat(user, "<span class='notice'>...but it doesn't seem to do anything to you.</span>")
+			used=TRUE
 			return
+		warn_admins(user, "Transcendence Serum")
 		to_chat(user, "<span class='notice'>You feel a massive surge of energy as your psionic abilities transcend mortal limits!</span>")
 		playsound(loc, 'sound/magic/teleport_app.ogg', 80, 0)
 		grant_power(user, XRAYBLOCK, XRAY)
@@ -343,7 +358,7 @@
 		grant_power(user, REMOTEVIEWBLOCK, REMOTE_VIEW)
 		grant_power(user, EMPATHBLOCK, EMPATH)
 		grant_power(user, PSYRESISTBLOCK, PSY_RESIST)
-		qdel(src)
+		used=TRUE
 
 /obj/item/discovered_tech/gene_transcendence_serum/proc/grant_power(mob/living/carbon/human/H, block, power)
 	if(!H.ignore_gene_stability)
@@ -352,3 +367,142 @@
 	H.mutations |= power
 	genemutcheck(H, block, null, MUTCHK_FORCED)
 	H.dna.default_blocks.Add(block) //prevent removal by mutadone
+
+// Gender Swapper
+// A COMMON single use device which swaps the user's gender and hairstyles. The UNCOMMON version is multi-use.
+/obj/item/discovered_tech/gender_swapper/initialize()
+	..()
+	origin_tech += "biotech=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "bluespace=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("biology", "transformation")
+	cooldownMax = round(rand(300,600)*(1.4-0.2*raritylevel)*(1.4-0.2*(stability/20)),1)
+
+/obj/item/discovered_tech/gender_swapper/itemproc(mob/user)
+	var/mob/living/carbon/human/H
+	warn_admins(user, "Gender Swapper", 0)
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now.</span>")
+		return
+	if(issilicon(user))
+		return
+	to_chat(user, "<span class='warning'>A wave of strange energy washes over you! You feel uncomfortably warm...</span>")
+	playsound(loc, 'sound/magic/charge.ogg', 80, 0)
+	if(!user.dna)
+		to_chat(user, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+		return
+	if(ishuman(user))
+		H = user
+		if(NO_DNA in H.dna.species.species_traits)
+			to_chat(H, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+			return
+		if(H.gender == MALE)
+			H.change_gender(FEMALE)
+			H.change_facial_hair("Shaved")
+			to_chat(H, "<span class='warning'>All of a sudden, you seem to have a lot less testosterone than usual.</span>")
+		else if(H.gender == FEMALE)
+			H.change_gender(MALE)
+			H.reset_facial_hair()
+			to_chat(H, "<span class='warning'>All of a sudden, you seem to have a lot more testosterone than usual.</span>")
+		else
+			// No gender bending for you, Neuters.
+			to_chat(H, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+	if(raritylevel == RARITY_COMMON)
+		used = TRUE
+
+// Mass Gene Modifier
+// A single use VERY RARE device that alters the genes of every organic creature with DNA on the z-level it's activated on.
+/obj/item/discovered_tech/mass_gene_modifier/initialize()
+	..()
+	origin_tech += "biotech=[4+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "bluespace=[4+rand(raritylevel,raritylevel+1)];"
+	keywords = list("biology", "transformation")
+	extra_data = pick("GENDER_SWAP", "DWARF", "CLOWN_VOICE")
+
+/obj/item/discovered_tech/mass_gene_modifier/itemproc(mob/user)
+	var/turf/U = get_turf(user)
+	var/z_level = U.z
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now.</span>")
+		return
+	if(!isinitialized)
+		initialize()
+	to_chat(user, "<span class='notice'>The device whirs ominously, and your scalp prickles with a massive energy build-up. Uh oh...</span>")
+	playsound(loc, 'sound/magic/lightning_chargeup.ogg', 100, 0)
+	warn_admins(user, "Mass Gene Modifier ([extra_data])")
+	spawn(100)
+	for(var/mob/living/L in GLOB.mob_list)
+		var/turf/T = get_turf(L)
+		if(!T || T.z != z_level)
+			continue
+		// Silicons aren't affected by this quasi-magical energy.
+		if(issilicon(L))
+			continue
+		L << 'sound/magic/charge.ogg'
+		to_chat(L, "<span class='warning'>A wave of strange energy washes over you! You feel uncomfortably warm...</span>")
+		if(!L.dna)
+			to_chat(L, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+			continue
+		if(ishuman(L))
+			var/mob/living/carbon/human/H = L
+			if(NO_DNA in H.dna.species.species_traits)
+				to_chat(H, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+				continue
+			alterDNA(H)
+	used = TRUE
+
+/obj/item/discovered_tech/mass_gene_modifier/proc/alterDNA(var/mob/living/carbon/human/target)
+	switch(extra_data)
+		if("GENDER_SWAP")
+			if(target.gender == MALE)
+				target.change_gender(FEMALE)
+				target.change_facial_hair("Shaved")
+				to_chat(target, "<span class='warning'>All of a sudden, you seem to have a lot less testosterone than usual.</span>")
+			else if(target.gender == FEMALE)
+				target.change_gender(MALE)
+				target.reset_facial_hair()
+				to_chat(target, "<span class='warning'>All of a sudden, you seem to have a lot more testosterone than usual.</span>")
+			else
+				to_chat(target, "<span class='warning'>...but it doesn't seem to do anything to you.</span>")
+		if("DWARF")
+			grant_power(target, SMALLSIZEBLOCK, DWARF)
+		if("CLOWN_VOICE")
+			grant_power(target, COMICBLOCK, COMIC)
+
+/obj/item/discovered_tech/mass_gene_modifier/proc/grant_power(mob/living/carbon/human/H, block, power)
+	H.dna.SetSEState(block, 1, 1)
+	H.mutations |= power
+	genemutcheck(H, block, null, MUTCHK_FORCED)
+
+// Syndicate Bomb Spawner
+// VERY RARE item that spawns, anchors and activates a generously timed syndicate bomb on use.
+// Want to play bomb squad? This is for you!
+/obj/item/discovered_tech/bomb_spawner/initialize()
+	..()
+	origin_tech += "plasmatech=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "powerstorage=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "combat=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("destruction")
+
+/obj/item/discovered_tech/bomb_spawner/itemproc(mob/user)
+	var/mob/living/carbon/human/U = user
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now... thank god.</span>")
+		return
+	playsound(loc, 'sound/magic/wand_teleport.ogg', 100, 0)
+	var/obj/machinery/syndicatebomb/bomb
+	// If the user is a clown, spawn a clown bomb instead.
+	if(U.job in list("Clown"))
+		bomb = new/obj/machinery/syndicatebomb/badmin/clown(user.loc)
+		warn_admins(user, "Syndicate Bomb Spawner (CLOWN)")
+		to_chat(user, "<span class='warning'>The device beeps quietly and something falls out of a bluespace p-OH DEAR GOD!</span>")
+	else
+		bomb = new/obj/machinery/syndicatebomb(user.loc)
+		warn_admins(user, "Syndicate Bomb Spawner")
+		to_chat(user, "<span class='warning'>The device beeps quietly and something falls out of a bluespace p-OH DEAR GOD!</span>")
+	bomb.anchored = 1
+	// About 5 minutes.
+	bomb.timer_set = 300
+	bomb.activate()
+	used = TRUE
+
+

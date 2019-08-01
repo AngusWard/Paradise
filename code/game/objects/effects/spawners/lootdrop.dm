@@ -259,7 +259,9 @@
 				/obj/item/autoimplanter = 50,
 
 				// Research / Experimentor
-				/obj/item/paper/researchnotes = 150, // papers that give random R&D levels
+				/obj/item/paper/researchnotes = 100,
+				/obj/item/unknown_tech/myst_tech = 100,
+				/obj/item/unknown_tech/alien_tech = 50,
 
 				// Xenobio
 				/obj/item/slimepotion/sentience = 50, // Low-value, but we want to encourage getting more players back in the round.

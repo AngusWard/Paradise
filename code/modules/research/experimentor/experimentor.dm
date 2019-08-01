@@ -31,6 +31,19 @@
 	var/spareparts = 0
 	var/datum/experimentor/loot_definer/LootDefiner = new/datum/experimentor/loot_definer()
 
+	// Admin variables
+	// set to 0-3 to force the next loot roll to be of that rarity.
+	var/experimentor_force_rarity = -1
+	// set to the desired type path to force the experimentor to spawn that item.
+	var/experimentor_force_type
+	// LEAVE THE BELOW AS NULL TO USE THE DEFAULT VALUES FOR THE SPAWNED ITEM
+	// set to the name you want the next spawned item to have (only applies to a force-spawned item. Change this first if you want a custom name.)
+	var/experimentor_force_name
+	// set to the description you want the next spawned item to have.
+	var/experimentor_force_desc
+	// set to the icon you want the next spawned item to have. Only pulls from assemblies.dmi.
+	var/experimentor_force_icon
+
 /obj/machinery/r_n_d/experimentor/New()
 	..()
 	component_parts = list()
@@ -304,8 +317,84 @@
 		rarity = RARITY_RARE
 	if(prob((T.vrare_weighting*T.innovation/100+1)*T.vrare_base))
 		rarity = RARITY_VERYRARE
-
+	if(experimentor_force_rarity >= RARITY_COMMON && experimentor_force_rarity <= RARITY_VERYRARE)
+		rarity = experimentor_force_rarity
+		experimentor_force_rarity = -1
+	if(experimentor_force_type != null)
+		var/obj/item/D = LootDefiner.forcedefine(experimentor_force_type, experimentor_force_name, experimentor_force_desc, experimentor_force_icon)
+		experimentor_force_type = null
+		return D
 	return LootDefiner.define(T.stability, T.potency, T.unpacked_name, rarity, T.containedtype)
+
+// Admin Stuff
+/obj/machinery/r_n_d/experimentor/proc/warn_admins(mob/user, var/procname, priority = 1)
+	var/turf/T = get_turf(src)
+	var/log_msg = "ADMIN VERB [procname] used by [key_name(user)] on experimentor at ([T.x],[T.y],[T.z])"
+	if(priority)
+		message_admins("ADMIN VERB [procname] used by [key_name(user)] on experimentor at ([T.x], [T.y], [T.z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[T.x];Y=[T.y];Z=[T.z]'>JMP</a>)",0,1)
+	log_game(log_msg)
+	investigate_log(log_msg, "experimentor")
+
+// Not sure how to set up verbs so they're admin only and show up on the experimentor's right click menu, so I'll put a pin in these for now.
+/* /obj/machinery/r_n_d/experimentor/verb/forcerarity(mob/user)
+	set src in oview(1)
+	set category = "Object"
+	set name = "Force Rarity"
+	if(!check_rights(R_ADMIN))
+		return
+	experimentor_force_rarity = input("Set next item rarity to what? (0=COMMON, 3=VERYRARE)", "Set next item rarity to [experimentor_force_rarity]") as num|null
+	if(isnull(experimentor_force_rarity))
+		return
+	feedback_add_details("admin_verb", "expSetRarity")
+	warn_admins(user, name)
+
+/obj/machinery/r_n_d/experimentor/verb/forcetype(mob/user)
+	set src in oview(1)
+	set category = "Object"
+	set name = "Force Type"
+	if(!check_rights(R_ADMIN))
+		return
+	experimentor_force_type = input("Enter object path to set as next unboxing (Set name/desc/icon first if desired):", "Object path set to[experimentor_force_type]")
+	if(isnull(experimentor_force_type))
+		return
+	feedback_add_details("admin_verb", "expSetType")
+	warn_admins(user, name)
+
+/obj/machinery/r_n_d/experimentor/verb/forcename(mob/user)
+	set src in oview(1)
+	set category = "Object"
+	set name = "Force Name"
+	if(!check_rights(R_ADMIN))
+		return
+	experimentor_force_name = input("Set next item name to what?", "Set next item name to [experimentor_force_name]") as num|null
+	if(isnull(experimentor_force_name))
+		return
+	feedback_add_details("admin_verb", "expSetName")
+	warn_admins(user, name)
+
+/obj/machinery/r_n_d/experimentor/verb/forcedesc(mob/user)
+	set src in oview(1)
+	set category = "Object"
+	set name = "Force Description"
+	if(!check_rights(R_ADMIN))
+		return
+	experimentor_force_desc = input("Set next item description to what?", "Set next item description to [experimentor_force_desc]") as num|null
+	if(isnull(experimentor_force_desc))
+		return
+	feedback_add_details("admin_verb", "expSetDesc")
+	warn_admins(user, name)
+
+/obj/machinery/r_n_d/experimentor/verb/forceicon(mob/user)
+	set src in oview(1)
+	set category = "Object"
+	set name = "Force Icon"
+	if(!check_rights(R_ADMIN))
+		return
+	experimentor_force_icon = input("Set next item icon to what (using assemblies.dmi)?", "Set next item icon to [experimentor_force_icon]") as num|null
+	if(isnull(experimentor_force_icon))
+		return
+	feedback_add_details("admin_verb", "expSetIcon")
+	warn_admins(user, name) */
 
 #undef SCANTYPE_POKE
 #undef SCANTYPE_IRRADIATE

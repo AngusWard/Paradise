@@ -45,8 +45,21 @@
 		loot_item.name = box_type + " [generateSecondName()][generateThirdName()]"
 	if(loot_item.use_generated_descriptions)
 		loot_item.desc = generateDescription()
+	if(raritylevel == RARITY_VERYRARE)
+		var/turf/T = get_turf(loot_item)
+		message_admins("The experimentor rolled a VERY RARE item of type [loot_item.type] at ([T.x], [T.y], [T.z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[T.x];Y=[T.y];Z=[T.z]'>JMP</a>)",0,1)
 	return loot_item
 
+// If an admin messes with the experimentor, it will use this proc.
+/datum/experimentor/loot_definer/proc/forcedefine(var/forcetype, var/forcename, var/forcedesc, var/forceicon)
+    var/obj/item/I = new forcetype()
+    if(forcename != null)
+        I.name = forcename
+    if(forcedesc != null)
+        I.desc = forcedesc
+    if(forceicon != null)
+        I.icon_state = forceicon
+    return I
 
 ///////////////////I. LOOT LIST////////////////////
 // Defines the loot lists for the experimentor
@@ -65,7 +78,8 @@
                     new/obj/item/discovered_tech/teleport(),
                     new/obj/item/discovered_tech/nothing(),
                     new/obj/item/discovered_tech/gene_granter(),
-                    new/obj/item/discovered_tech/rapidDuplicator())
+                    new/obj/item/discovered_tech/rapidDuplicator(),
+                    new/obj/item/discovered_tech/gender_swapper())
             if(raritylevel == RARITY_UNCOMMON)
                 return pick(
                     new/obj/item/discovered_tech/teleport(),
@@ -74,7 +88,8 @@
                     new/obj/item/discovered_tech/massSpawner(),
                     new/obj/item/discovered_tech/flashbang(),
                     new/obj/item/discovered_tech/gene_granter(),
-                    new/obj/item/discovered_tech/cleaner())
+                    new/obj/item/discovered_tech/cleaner(),
+                    new/obj/item/discovered_tech/gender_swapper())
             if(raritylevel == RARITY_RARE)
                 return pick(
                     new/obj/item/discovered_tech/explosion(),
@@ -85,10 +100,9 @@
                     new/obj/item/discovered_tech/teleport())
             if(raritylevel == RARITY_VERYRARE)
                 return pick(
-                    new/obj/item/discovered_tech/teleport(),
-                    new/obj/item/discovered_tech/explosion(),
-                    new/obj/item/discovered_tech/rapidDuplicator(),
-                    new/obj/item/discovered_tech/gene_transcendence_serum())
+                    new/obj/item/discovered_tech/bomb_spawner(),
+                    new/obj/item/discovered_tech/gene_transcendence_serum(),
+                    new/obj/item/discovered_tech/mass_gene_modifier())
     // If there is no type applicable to the one provided, the experimentor will produce a useless item.
     return new/obj/item/discovered_tech/nothing()
 
