@@ -7,6 +7,8 @@
 #define RARITY_RARE 2
 #define RARITY_VERYRARE 3
 
+#define DESC_ONEUSE "<span class='warning'>It looks disposable...</span>"
+
 /obj/item/discovered_tech
 	name = "Discovered Technology"
 	desc = "A strange device. Its function is not immediately apparent."
@@ -23,6 +25,7 @@
 	var/base_name = "Unknown"
 	var/extra_data
 	var/list/extra_data_list
+	var/extra_description
 	var/box_type
 	// Is checked by devices that have more than origin tech and keywords in the init proc to make sure initialization is complete.
 	var/isinitialized = FALSE
@@ -250,6 +253,7 @@
 	..()
 	origin_tech += "biotech=[4+rand(raritylevel,raritylevel+1)];"
 	keywords = list("enhancement", "biology")
+	extra_description = DESC_ONEUSE
 
 	var/adjpotency = potency + (raritylevel*30-30)
 	var/adjstability = stability + (raritylevel*30-30)
@@ -331,6 +335,7 @@
 	..()
 	origin_tech += "biotech=[raritylevel+rand(raritylevel,raritylevel+1)];"
 	keywords = list("enhancement", "biology", "transformation")
+	extra_description = DESC_ONEUSE
 
 /obj/item/discovered_tech/gene_transcendence_serum/itemproc(mob/user)
 	// It'll behave in most ways like a gene granter when interacted with by a DNA-less pleb.
@@ -376,6 +381,8 @@
 	origin_tech += "bluespace=[raritylevel+rand(raritylevel,raritylevel+1)];"
 	keywords = list("biology", "transformation")
 	cooldownMax = round(rand(300,600)*(1.4-0.2*raritylevel)*(1.4-0.2*(stability/20)),1)
+	if(raritylevel<RARITY_UNCOMMON)
+		extra_description = DESC_ONEUSE
 
 /obj/item/discovered_tech/gender_swapper/itemproc(mob/user)
 	var/mob/living/carbon/human/H
@@ -417,6 +424,7 @@
 	origin_tech += "bluespace=[4+rand(raritylevel,raritylevel+1)];"
 	keywords = list("biology", "transformation")
 	extra_data = pick("GENDER_SWAP", "DWARF", "CLOWN_VOICE")
+	extra_description = DESC_ONEUSE
 
 /obj/item/discovered_tech/mass_gene_modifier/itemproc(mob/user)
 	var/turf/U = get_turf(user)
@@ -504,5 +512,64 @@
 	bomb.timer_set = 300
 	bomb.activate()
 	used = TRUE
+
+// Vendor Spawner
+// Uncommon: Spawns a random vending machine at the user's position. High potency grants a chance at a donksoft or liberation station.
+/obj/item/discovered_tech/vendor_spawner/initialize()
+	..()
+	origin_tech += "bluespace=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "materials=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("commerce", "teleportation")
+	extra_description = DESC_ONEUSE
+
+/obj/item/discovered_tech/vendor_spawner/itemproc(mob/user)
+	if(used)
+		to_chat(user, "<span class='notice'>Whatever payload was in this thing has been spent. It's useless now.</span>")
+		return
+	var/list/obj/machinery/vending/vendors = list(
+		/obj/machinery/vending/boozeomat,
+		/obj/machinery/vending/assist,
+		/obj/machinery/vending/coffee,
+		/obj/machinery/vending/snack,
+		/obj/machinery/vending/chinese,
+		/obj/machinery/vending/cola,
+		/obj/machinery/vending/cart,
+		/obj/machinery/vending/cigarette,
+		/obj/machinery/vending/medical,
+		/obj/machinery/vending/hydronutrients,
+		/obj/machinery/vending/hydroseeds,
+		/obj/machinery/vending/autodrobe,
+		/obj/machinery/vending/dinnerware,
+		/obj/machinery/vending/sovietsoda,
+		/obj/machinery/vending/engivend,
+		/obj/machinery/vending/sustenance,
+		/obj/machinery/vending/hatdispenser,
+		/obj/machinery/vending/suitdispenser,
+		/obj/machinery/vending/shoedispenser,
+		/obj/machinery/vending/syndicigs,
+		/obj/machinery/vending/syndisnack,
+		/obj/machinery/vending/clothing,
+		/obj/machinery/vending/artvend,
+		/obj/machinery/vending/crittercare	
+	)
+	if(potency>70)
+		vendors.Add(
+			/obj/machinery/vending/magivend,
+			/obj/machinery/vending/liberationstation,
+			/obj/machinery/vending/toyliberationstation,
+			/obj/machinery/vending/security
+		)
+	to_chat(user, "<span class='notice'>You hear a suave salesperson speak into your ear: 'Tired of always having to go meet capitalism on its terms? Worry not, we're bringing the capitalism to you!'</span>")
+	to_chat(user, "<span class='warning'>The device rumbles alarmingly...</span>")
+	playsound(loc, 'sound/misc/interference.ogg', 100, 0)
+	spawn(10)
+		playsound(loc, 'sound/magic/ethereal_exit.ogg', 100, 0)
+	spawn(30)
+		playsound(loc, 'sound/effects/hit_kick.ogg', 100, 0)
+		var/list/obj/machinery/vending/chosenvendor = pick(vendors)
+		var/list/obj/machinery/vending/V = new chosenvendor(get_turf(src))
+		to_chat(user, "<span class='warning'>The device expands into a [V.name]!</span>")
+		qdel(src)
+
 
 

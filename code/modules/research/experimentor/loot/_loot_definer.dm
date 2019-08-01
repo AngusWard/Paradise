@@ -22,11 +22,11 @@
 // If you're just adding new loot you shouldn't have to touch this.
 
 /datum/experimentor/loot_definer
-    var/stability = 0
-    var/potency = 0
-    var/raritylevel = 0
-    var/box_type
-    var/item_category
+    var/stability = 50
+    var/potency = 50
+    var/raritylevel = 1
+    var/box_type = "Unknown"
+    var/item_category = "Device"
     var/obj/item/discovered_tech/loot_item
 
 // Returns a finished item from the stats supplied to the experimentor.
@@ -50,13 +50,20 @@
 		message_admins("The experimentor rolled a VERY RARE item of type [loot_item.type] at ([T.x], [T.y], [T.z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[T.x];Y=[T.y];Z=[T.z]'>JMP</a>)",0,1)
 	return loot_item
 
-// If an admin messes with the experimentor, it will use this proc.
+// If an admin messes with the experimentor, it will use this proc instead.
 /datum/experimentor/loot_definer/proc/forcedefine(var/forcetype, var/forcename, var/forcedesc, var/forceicon)
     var/obj/item/I = new forcetype()
+    if(istype(I, /obj/item/discovered_tech))
+        loot_item=I
+        loot_item.initialize()
     if(forcename != null)
         I.name = forcename
+    else if(istype(I, /obj/item/discovered_tech))
+        loot_item.name = box_type + " [generateSecondName()][generateThirdName()]"
     if(forcedesc != null)
         I.desc = forcedesc
+    else if(istype(I, /obj/item/discovered_tech))
+        loot_item.desc = generateDescription()
     if(forceicon != null)
         I.icon_state = forceicon
     return I
@@ -89,7 +96,8 @@
                     new/obj/item/discovered_tech/flashbang(),
                     new/obj/item/discovered_tech/gene_granter(),
                     new/obj/item/discovered_tech/cleaner(),
-                    new/obj/item/discovered_tech/gender_swapper())
+                    new/obj/item/discovered_tech/gender_swapper(),
+                    new/obj/item/discovered_tech/vendor_spawner())
             if(raritylevel == RARITY_RARE)
                 return pick(
                     new/obj/item/discovered_tech/explosion(),
@@ -198,5 +206,7 @@
 		item_description += pick("This is an incredible example of [box_type] Technology. ", "This is a piece of [box_type] Technology. It's so complex you have no idea how it works. ")
 
 	if(loot_item.keywords.len>=1)
-		item_description += pick("There's a marking on the side which reminds you of [pick(loot_item.keywords)].", "When you look at it, you can't help but think of [pick(loot_item.keywords)].", "It's hard to tell for sure, but it seems to have something to do with [pick(loot_item.keywords)].")
+		item_description += pick("There's a marking on the side which reminds you of [pick(loot_item.keywords)]. ", "When you look at it, you can't help but think of [pick(loot_item.keywords)]. ", "It's hard to tell for sure, but it seems to have something to do with [pick(loot_item.keywords)]. ")
+	if (loot_item.extra_description != null)
+		item_description += loot_item.extra_description
 	return item_description
