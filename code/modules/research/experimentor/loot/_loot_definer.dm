@@ -86,7 +86,8 @@
                     new/obj/item/discovered_tech/nothing(),
                     new/obj/item/discovered_tech/gene_granter(),
                     new/obj/item/discovered_tech/rapidDuplicator(),
-                    new/obj/item/discovered_tech/gender_swapper())
+                    new/obj/item/discovered_tech/gender_swapper(),
+                    new/obj/item/discovered_tech/container())
             if(raritylevel == RARITY_UNCOMMON)
                 return pick(
                     new/obj/item/discovered_tech/teleport(),
@@ -100,12 +101,9 @@
                     new/obj/item/discovered_tech/vendor_spawner())
             if(raritylevel == RARITY_RARE)
                 return pick(
-                    new/obj/item/discovered_tech/explosion(),
-                    new/obj/item/discovered_tech/massSpawner(),
-                    new/obj/item/discovered_tech/rapidDuplicator(),
-                    new/obj/item/discovered_tech/flashbang(),
                     new/obj/item/discovered_tech/gene_granter(),
-                    new/obj/item/discovered_tech/teleport())
+                    new/obj/item/discovered_tech/tele_swapper(),
+                    new/obj/item/discovered_tech/remote_flashbang())
             if(raritylevel == RARITY_VERYRARE)
                 return pick(
                     new/obj/item/discovered_tech/bomb_spawner(),

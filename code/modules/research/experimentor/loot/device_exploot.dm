@@ -163,8 +163,7 @@
 
 /obj/item/discovered_tech/flashbang/itemproc(mob/user)
 	playsound(src.loc, "sparks", rand(25,50), 1)
-	var/obj/item/grenade/flashbang/CB = new/obj/item/grenade/flashbang(get_turf(user))
-	CB.range = rand(stability/25, max(potency/10, 4))
+	var/obj/item/grenade/flashbang/CB = new/obj/item/grenade/flashbang(get_turf(src))
 	CB.prime()
 	warn_admins(user, "Flashbang")
 
@@ -202,6 +201,7 @@
 			qdel(R)
 
 // Teleporter
+// Jumps you to a random nearby location. Higher potency means more distance.
 /obj/item/discovered_tech/teleport/initialize()
 	..()
 	origin_tech += "bluespace=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
@@ -258,7 +258,7 @@
 
 	var/adjpotency = potency + (raritylevel*30-30)
 	var/adjstability = stability + (raritylevel*30-30)
-	var/supplied_genes = raritylevel+1
+	var/supplied_genes = raritylevel+2
 	var/list/obj/item/dnainjector/samples = new/list
 	extra_data_list = new/list
 	var/chosenGene
@@ -283,8 +283,13 @@
 	// If no conditions are met, grants useless genes instead. There must be at least 3 possibilities.
 	if(samples.len < 3)
 		samples.Add(new/obj/item/dnainjector/stuttmut, new/obj/item/dnainjector/coughmut, new/obj/item/dnainjector/comic)
-	//If good genes are available pick one (to ensure that every injection grants at least something good)
+	//At least 1 gene in uncommon or 2 in rare will be of the good (or harmless) variety.
 	if(raritylevel >= RARITY_UNCOMMON)
+		chosenGene = pick(samples)
+		extra_data_list.Add(chosenGene)
+		samples.Remove(chosenGene)
+		supplied_genes -= 1
+	if(raritylevel >= RARITY_RARE)
 		chosenGene = pick(samples)
 		extra_data_list.Add(chosenGene)
 		samples.Remove(chosenGene)
@@ -569,6 +574,10 @@
 		playsound(loc, 'sound/effects/hit_kick.ogg', 100, 0)
 		var/list/obj/machinery/vending/chosenvendor = pick(vendors)
 		var/list/obj/machinery/vending/V = new chosenvendor(src.loc)
+		if(chosenvendor in list(/obj/machinery/vending/magivend, /obj/machinery/vending/liberationstation, /obj/machinery/vending/toyliberationstation, /obj/machinery/vending/security))
+			warn_admins(user, "Vendor Spawner([chosenvendor.name])")
+		else
+			warn_admins(user, "Vendor Spawner([chosenvendor.name])", 0)
 		to_chat(user, "<span class='warning'>The device expands into a [V.name]!</span>")
 		qdel(src)
 
@@ -600,7 +609,7 @@
 		P.initialize()
 		P.extra_data_obj = src
 		to_chat(user, "<span class='notice'>The device splits into two identical copies. Curious.</span>")
-		
+
 	// Puts both devices on cooldown whether the swap works or not, if held by a living target.
 	else if(istype(extra_data_obj.loc, /mob/living))
 		var/mob/living/M = extra_data_obj.loc
@@ -611,8 +620,119 @@
 		S.cast(M, user, 1)
 		var/obj/item/discovered_tech/O = extra_data_obj
 		O.cooldown = TRUE
-		to_chat(user, "<span class='warning'>You feel very strange...</span>")
-		to_chat(M, "<span class='warning'>You feel very strange...</span>")
+		to_chat(user, "<span class='warning'>The device beeps. You feel very strange...</span>")
+		to_chat(M, "<span class='warning'>The device beeps. You feel very strange...</span>")
+		warn_admins(user, "Mind Swapper (Target:[M.name])")
 	else
 		to_chat(user, "<span class='notice'>The device is quiet, like it's waiting for something...</span>")
 		cooldown = FALSE
+
+// Teleswapper
+// Rare teleporter variant that swaps the user's position with the nearest mob. Max range scales with potency.
+/obj/item/discovered_tech/tele_swapper/initialize()
+	..()
+	origin_tech += "bluespace=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "engineering=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("teleportation")
+	cooldownMax = 900-stability*6
+
+/obj/item/discovered_tech/tele_swapper/itemproc(mob/user)
+	if(!isinitialized)
+		initialize()
+	var/list/targets = list()
+	var/mob/living/target
+	for(var/mob/living/M in view_or_range(round(potency/10, 1), user, "view"))
+		targets.Add(M)
+	if(targets.len>1)
+		target = targets[2]
+		var/turf/T = get_turf(user)
+		var/turf/L = get_turf(target)
+		do_teleport(user, L, 0, asoundin = 'sound/effects/phasein.ogg')
+		to_chat(user, "<span class='warning'>Suddenly, you're standing where [target.name] was!</span>")
+		do_teleport(target, T, 0, asoundin = 'sound/effects/phasein.ogg')
+		to_chat(target, "<span class='warning'>Suddenly, you're standing where [user.name] was!</span>")
+		warn_admins(user, "Tele-Swapper", 0)
+	else
+		cooldown = FALSE
+		to_chat(user, "<span class='notice'>The device hums briefly, but doesn't seem to do anything.</span>")
+
+// Remote Flashbang (Rare)
+// Spawns a regular flashbang device when used which can be detonated (and destroyed) by using the device again.
+/obj/item/discovered_tech/remote_flashbang/initialize()
+	..()
+	origin_tech += "programming=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "combat=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "plasmatech=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("light", "sound")
+	cooldownMax = 6000-stability*30
+
+/obj/item/discovered_tech/remote_flashbang/itemproc(mob/user)
+	if(!isinitialized)
+		initialize()
+	// Create and pair a second device.
+	var/obj/item/discovered_tech/flashbang/P
+	if(extra_data_obj == null)
+		cooldown = FALSE
+		extra_data_obj = new /obj/item/discovered_tech/flashbang(get_turf(src))
+		P = extra_data_obj
+		P.name = name
+		P.desc = desc
+		P.icon_state = icon_state
+		P.raritylevel = raritylevel
+		P.stability = stability
+		P.potency = potency
+		P.initialize()
+		to_chat(user, "<span class='notice'>A new, duplicate device drops out of a bluespace portal at your feet. Huh.</span>")
+	else
+		warn_admins(user, "Remote Flashbang Detonator")
+		P = extra_data_obj
+		P.itemproc()
+		spawn(10)
+			qdel(P)
+
+// Container
+// Common device which becomes a usable beaker upon activation. Scales strongly with potency and stability, maxing out at 1000 units.
+// Has a chance to contain a random amount of a reagent, including some rare ones.
+/obj/item/discovered_tech/container/initialize()
+	..()
+	origin_tech += "bluespace=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "materials=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "engineering=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("bluespace")
+
+/obj/item/discovered_tech/container/itemproc(mob/user)
+	var/obj/item/reagent_containers/glass/beaker/experimentor/C = new/obj/item/reagent_containers/glass/beaker/experimentor(get_turf(src))
+	C.volume = min(round(100 + rand(stability*5, potency*10), 1),1000)
+	C.name = name
+	C.desc = desc
+	C.icon = icon
+	C.potency = potency
+	C.icon_state = icon_state
+	C.pop()
+	to_chat(user, "<span class='notice'>You fiddle with the [name] and a hatch springs open. There appears to be a hollow inside!</span>")
+	warn_admins(user, "Container", 0)
+	qdel(src)
+
+/obj/item/reagent_containers/glass/beaker/experimentor
+	var/potency = 0
+
+/obj/item/reagent_containers/glass/beaker/experimentor/proc/pop()
+	has_lid = FALSE
+	origin_tech += "bluespace=[5];materials=[4];engineering=[4];"
+	possible_transfer_amounts = list(5,10,15,25,30,50,100)
+	volume = 100
+	if(prob(70))
+		var/R = pick(GLOB.chemical_reagents_list)
+		message_admins("Reagent chosen: [R]",0,1)
+		if(GLOB.rare_chemicals.Find(R))
+			reagents.add_reagent(R, potency/5+(rand(0,20)-10))
+		else
+			reagents.add_reagent(R, potency+(rand(0,20)-10))
+
+
+
+
+
+
+
+
