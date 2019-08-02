@@ -24,6 +24,7 @@
 	var/raritylevel = RARITY_UNCOMMON
 	var/base_name = "Unknown"
 	var/extra_data
+	var/obj/extra_data_obj
 	var/list/extra_data_list
 	var/extra_description
 	var/box_type
@@ -550,7 +551,7 @@
 		/obj/machinery/vending/syndisnack,
 		/obj/machinery/vending/clothing,
 		/obj/machinery/vending/artvend,
-		/obj/machinery/vending/crittercare	
+		/obj/machinery/vending/crittercare
 	)
 	if(potency>70)
 		vendors.Add(
@@ -567,9 +568,51 @@
 	spawn(30)
 		playsound(loc, 'sound/effects/hit_kick.ogg', 100, 0)
 		var/list/obj/machinery/vending/chosenvendor = pick(vendors)
-		var/list/obj/machinery/vending/V = new chosenvendor(get_turf(src))
+		var/list/obj/machinery/vending/V = new chosenvendor(src.loc)
 		to_chat(user, "<span class='warning'>The device expands into a [V.name]!</span>")
 		qdel(src)
 
+// Mindswapper
+// Very rare loot that spawns a second device when used.
+// When both devices are held by seperate people and either device is triggered, swaps minds between the two characters.
+// Long (~2m) cooldown, but reusable.
+/obj/item/discovered_tech/mind_swapper/initialize()
+	..()
+	origin_tech += "bluespace=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "engineering=[raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("transformation", "teleportation")
+	cooldownMax = 1800-stability*12
 
-
+/obj/item/discovered_tech/mind_swapper/itemproc(mob/user)
+	if(!isinitialized)
+		initialize()
+	// Create and pair a second device.
+	if(extra_data_obj == null)
+		cooldown = FALSE
+		extra_data_obj = new type(get_turf(src))
+		var/obj/item/discovered_tech/mind_swapper/P = extra_data_obj
+		P.name = name
+		P.desc = desc
+		P.icon_state = icon_state
+		P.raritylevel = raritylevel
+		P.stability = stability
+		P.potency = potency
+		P.initialize()
+		P.extra_data_obj = src
+		to_chat(user, "<span class='notice'>The device splits into two identical copies. Curious.</span>")
+		
+	// Puts both devices on cooldown whether the swap works or not, if held by a living target.
+	else if(istype(extra_data_obj.loc, /mob/living))
+		var/mob/living/M = extra_data_obj.loc
+		var/obj/effect/proc_holder/spell/targeted/mind_transfer/S = new/obj/effect/proc_holder/spell/targeted/mind_transfer
+		S.paralysis_amount_caster = 0
+		S.paralysis_amount_victim = 0
+		S.invocation_type = "none"
+		S.cast(M, user, 1)
+		var/obj/item/discovered_tech/O = extra_data_obj
+		O.cooldown = TRUE
+		to_chat(user, "<span class='warning'>You feel very strange...</span>")
+		to_chat(M, "<span class='warning'>You feel very strange...</span>")
+	else
+		to_chat(user, "<span class='notice'>The device is quiet, like it's waiting for something...</span>")
+		cooldown = FALSE

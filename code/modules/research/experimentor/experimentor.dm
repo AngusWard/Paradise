@@ -1,11 +1,12 @@
-#define SCANTYPE_POKE 1
-#define SCANTYPE_IRRADIATE 2
-#define SCANTYPE_GAS 3
-#define SCANTYPE_HEAT 4
-#define SCANTYPE_COLD 5
-#define SCANTYPE_OBLITERATE 6
+#define SCANTYPE_TINKER 1
+#define SCANTYPE_INVENT 2
+#define SCANTYPE_CONSERVE 3
+#define SCANTYPE_OVERCLOCK 4
+#define SCANTYPE_COOL 5
+#define SCANTYPE_SCRAMBLE 6
 #define SCANTYPE_DISCOVER 7
 #define SCANTYPE_RECYCLE 8
+#define SCANTYPE_PROTOTYPE 9
 
 #define RARITY_COMMON 0
 #define RARITY_UNCOMMON 1
@@ -156,21 +157,33 @@
 			dat += "<br>"
 
 		dat += "<br>Available actions:"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_POKE]'>Tinker</A></b>"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_IRRADIATE];'>Invent</A></b>"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_GAS]'>Conserve</A></b>"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_HEAT]'>Overclock</A></b>"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_COLD]'>Cool</A></b><br>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_TINKER]'>Tinker</A></b>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_INVENT];'>Invent</A></b>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_CONSERVE]'>Conserve</A></b>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_OVERCLOCK]'>Overclock</A></b>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_COOL]'>Cool</A></b><br>"
 		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_DISCOVER]'>Discover</A></b>"
-		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_OBLITERATE]'>Scramble</A></b><br>"
+		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_SCRAMBLE]'>Scramble</A></b><br>"
 		dat += "<br><b><a href='byond://?src=[UID()];function=eject'>Eject</A>"
 	else if(loaded_item != null)
 		dat += "<b>Loaded Item:</b> [loaded_item.name]<br>"
-		dat += "<br>Available actions:"
+		if(istype(loaded_item, /obj/item/discovered_tech))
+			var/obj/item/discovered_tech/T = loaded_item
+			if(precise_scanner >= 2)
+				dat += "<br><b>Stability:</b> [T.stability]"
+				dat += "<br><b>Potency:</b> [T.potency]"
+			if(precise_scanner >= 3)
+				dat += "<br><br><b>Scanner:</b>"
+				for(var/keyword in T.keywords)
+					dat += "[keyword]<br>"
+		dat += "<br><br>Available actions:"
 		dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_RECYCLE]'>Recycle</A></b><br>"
 		dat += "<br><b><a href='byond://?src=[UID()];function=eject'>Eject</A>"
 	else
 		dat += "<b>Nothing loaded.</b>"
+		if(spareparts >= 100)
+			dat += "<br><b><a href='byond://?src=[UID()];item=\ref[loaded_item];function=[SCANTYPE_PROTOTYPE]'>Recycle</A></b><br>"
+	dat += "<br><b>Spare Parts Reserve:</b> [spareparts]/100"
 	dat += "<br><a href='byond://?src=[UID()];function=refresh'>Refresh</A><br>"
 	dat += "<br><a href='byond://?src=[UID()];close=1'>Close</A><br></center>"
 	var/datum/browser/popup = new(user, "experimentor","Experimentor", 500, 700, src)
@@ -199,32 +212,32 @@
 			return
 		//It's harder to raise innovation.
 		var/adjusted_flex_cost = base_flex_cost - (round(T.stability/20,1)-2)
-		if(text2num(scantype) == SCANTYPE_POKE)
+		if(text2num(scantype) == SCANTYPE_TINKER)
 			T.adjuststability(rand(2,10))
 			T.adjustinnovation(-rand(0,6))
 			T.adjustflexibility(-rand(adjusted_flex_cost, adjusted_flex_cost + 5))
 			to_chat(usr, "<span class='notice'>Mechanical arms carefully grease and work the [T.name] as lasers prune away excess weight.</span>")
 			playsound(src.loc, 'sound/machines/click.ogg', 50, 1)
-		if(text2num(scantype) == SCANTYPE_IRRADIATE)
+		if(text2num(scantype) == SCANTYPE_INVENT)
 			T.adjustinnovation(rand(2,6))
 			T.adjuststability(-rand(0,4))
 			T.adjustpotency(-rand(0,4))
 			T.adjustflexibility(-rand(adjusted_flex_cost, adjusted_flex_cost + 5))
 			to_chat(usr, "<span class='notice'>The E.X.P.E.R.I-MENTOR removes a single part from the [T.name], replacing it with a different one.</span>")
 			playsound(src.loc, 'sound/weapons/gun_interactions/pistol_magin.ogg', 50, 1)
-		if(text2num(scantype) == SCANTYPE_GAS)
+		if(text2num(scantype) == SCANTYPE_CONSERVE)
 			T.adjustpotency(rand(2,10))
 			T.adjustinnovation(-rand(0,6))
 			T.adjustflexibility(-rand(adjusted_flex_cost, adjusted_flex_cost + 5))
 			to_chat(usr, "<span class='notice'>The E.X.P.E.R.I-MENTOR replaces some of the more delicate components in the [T.name] with more rugged equivalents.</span>")
 			playsound(src.loc, 'sound/machines/click.ogg', 50, 1)
-		if(text2num(scantype) == SCANTYPE_HEAT)
+		if(text2num(scantype) == SCANTYPE_OVERCLOCK)
 			T.adjustpotency(rand(2,8))
 			T.adjuststability(-rand(0,6))
 			T.adjustflexibility(-rand(adjusted_flex_cost, adjusted_flex_cost + 5))
 			to_chat(usr, "<span class='notice'>The [T.name] glows ever so slightly as its core clock speed increases.</span>")
 			playsound(loc, "sparks", 75, 1, -1)
-		if(text2num(scantype) == SCANTYPE_COLD)
+		if(text2num(scantype) == SCANTYPE_COOL)
 			T.adjuststability(rand(2,8))
 			T.adjustpotency(-rand(0,6))
 			T.adjustflexibility(-rand(adjusted_flex_cost, adjusted_flex_cost + 5))
@@ -235,7 +248,7 @@
 			ejectItem()
 			to_chat(usr, "<span class='notice'>The E.X.P.E.R.I-MENTOR assembles the [T.name] into its new, final form!</span>")
 			playsound(src.loc, 'sound/items/rped.ogg', 50, 1)
-		if(text2num(scantype) == SCANTYPE_OBLITERATE)
+		if(text2num(scantype) == SCANTYPE_SCRAMBLE)
 			T.reroll()
 			T.adjustflexibility(-5+rand(adjusted_flex_cost*2, adjusted_flex_cost*3))
 			to_chat(usr, "<span class='notice'>The [T.name] is carefully taken apart and reassembled in a brand-new configuration by the tiny manipulators.</span>")
@@ -244,7 +257,21 @@
 			ejectItem(TRUE)
 			playsound(loc, 'sound/effects/splat.ogg', 50, 1)
 			to_chat(usr, "<span class='notice'>The [T.name] is sliced apart by the laser grid and the parts are stored away.</span>")
-			spareparts += 50
+			if(istype(loaded_item, /obj/item/discovered_tech))
+				var/obj/item/discovered_tech/D = loaded_item
+				if(D.used)
+					spareparts += 10 + 10*D.raritylevel+1
+				else
+					spareparts += 25 + 25*D.raritylevel+1
+			else
+				spareparts += 25
+		if(text2num(scantype) == SCANTYPE_PROTOTYPE)
+			if(spareparts >= 100)
+				to_chat(usr, "<span class='notice'>The E.X.P.E.R.I-MENTOR beeps and assembles a new prototype from the spare parts reserve!</span>")
+				playsound(src.loc, 'sound/machines/ping.ogg', 50, 0)
+				loaded_item = new/obj/item/unknown_tech/proto_tech()
+				spareparts -= 100
+				ejectItem()
 		use_power(750)
 		//If an adjustment takes flexibility to 0, the tech is destroyed.
 		if(istype(loaded_item, /obj/item/unknown_tech))
@@ -253,12 +280,6 @@
 				to_chat(usr, "<span class='warning'>The [T.name] cannot handle the adjustment and breaks apart!</span>")
 				playsound(loc, 'sound/effects/splat.ogg', 50, 1)
 				criticalfailure()
-		if(spareparts >= 100)
-			to_chat(usr, "<span class='notice'>The E.X.P.E.R.I-MENTOR beeps and assembles a new prototype from the spare parts reserve!</span>")
-			playsound(src.loc, 'sound/machines/ping.ogg', 50, 0)
-			loaded_item = new/obj/item/unknown_tech/proto_tech()
-			spareparts -= 100
-			ejectItem()
 	src.updateUsrDialog()
 	return
 
@@ -404,6 +425,7 @@
 #undef SCANTYPE_OBLITERATE
 #undef SCANTYPE_DISCOVER
 #undef SCANTYPE_RECYCLE
+#undef SCANTYPE_PROTOTYPE
 
 #undef RARITY_COMMON
 #undef RARITY_UNCOMMON

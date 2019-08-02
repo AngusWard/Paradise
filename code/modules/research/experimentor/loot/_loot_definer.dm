@@ -110,7 +110,8 @@
                 return pick(
                     new/obj/item/discovered_tech/bomb_spawner(),
                     new/obj/item/discovered_tech/gene_transcendence_serum(),
-                    new/obj/item/discovered_tech/mass_gene_modifier())
+                    new/obj/item/discovered_tech/mass_gene_modifier(),
+                    new/obj/item/discovered_tech/mind_swapper())
     // If there is no type applicable to the one provided, the experimentor will produce a useless item.
     return new/obj/item/discovered_tech/nothing()
 
