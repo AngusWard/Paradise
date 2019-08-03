@@ -731,7 +731,6 @@
 	volume = 100
 	if(prob(70))
 		var/R = pick(GLOB.chemical_reagents_list)
-		message_admins("Reagent chosen: [R]",0,1)
 		if(GLOB.rare_chemicals.Find(R))
 			reagents.add_reagent(R, potency/5+(rand(0,20)-10))
 		else
@@ -769,6 +768,45 @@
 			S.attack(target, user)
 			setCooldown()
 			extra_data = TRUE
+
+// Weaponizer (Rare)
+// Converts any item into an effective melee weapon. Larger and two-handed items get a higher damage buff.
+/obj/item/discovered_tech/weaponizer/initialize()
+	..()
+	origin_tech += "combat=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "materials=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	origin_tech += "engineering=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("destruction", "enhancement")
+	extra_data = 10 + round(potency / 10, 1)
+
+/obj/item/discovered_tech/weaponizer/attackby(obj/item/O, mob/user)
+	if(!isinitialized)
+		initialize()
+	var/adjustedforce = extra_data * (1 + ((min(O.w_class))-1)*0.2)
+	if(O.force > adjustedforce)
+		to_chat(user, "<span class='notice'>The device doesn't seem to react with the [O.name].</span>")
+		return
+	to_chat(user, "<span class='notice'>The device quickly takes itself apart, integrating itself into the [O.name]. The [O.name] feels ponderous, like it has grown heavier, but it doesn't seem to weigh any different. You hold it aloft, admiring it in its perfection. Truly, this is the kingliest [O.name] of all!</span>")
+	if(istype(O, /obj/item/twohanded))
+		var/obj/item/twohanded/T = O
+		T.force_wielded = adjustedforce*1.2
+		warn_admins(user, "Weaponizer (Force: [T.force_wielded])")
+		T.force_unwielded = adjustedforce*0.5
+		if(T.wielded)
+			T.force = T.force_wielded
+		else
+			T.force = T.force_unwielded
+	else
+		O.force = adjustedforce
+		warn_admins(user, "Weaponizer (Force: [O.force])")
+	O.throwforce = max(adjustedforce, O.throwforce)
+	O.desc += " This is the most powerful [O.name] you've ever seen!"
+	O.name = "Excali-[O.name]"
+	qdel(src)
+
+/obj/item/discovered_tech/weaponizer/attack_self(mob/user)
+	to_chat(user, "<span class='notice'>This looks like it's designed to have something placed on it...</span>")
+
 
 
 

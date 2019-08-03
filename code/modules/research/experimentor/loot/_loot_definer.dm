@@ -79,7 +79,7 @@
             // Lists by rarity.
             if(raritylevel == RARITY_COMMON)
                 return pick(
-                    new/obj/item/discovered_tech/cleaner(),
+                    new/obj/item/discovered_tech/flashbang(),
                     new/obj/item/discovered_tech/smokebomb(),
                     new/obj/item/discovered_tech/floofcannon(),
                     new/obj/item/discovered_tech/teleport(),
@@ -95,7 +95,6 @@
                     new/obj/item/discovered_tech/rapidDuplicator(),
                     new/obj/item/discovered_tech/explosion(),
                     new/obj/item/discovered_tech/massSpawner(),
-                    new/obj/item/discovered_tech/flashbang(),
                     new/obj/item/discovered_tech/gene_granter(),
                     new/obj/item/discovered_tech/cleaner(),
                     new/obj/item/discovered_tech/gender_swapper(),
@@ -104,7 +103,8 @@
                 return pick(
                     new/obj/item/discovered_tech/gene_granter(),
                     new/obj/item/discovered_tech/tele_swapper(),
-                    new/obj/item/discovered_tech/remote_flashbang())
+                    new/obj/item/discovered_tech/remote_flashbang(),
+                    new/obj/item/discovered_tech/weaponizer())
             if(raritylevel == RARITY_VERYRARE)
                 return pick(
                     new/obj/item/discovered_tech/bomb_spawner(),
