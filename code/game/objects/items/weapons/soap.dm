@@ -20,8 +20,17 @@
 
 	var/cleanspeed = 50 //slower than mop
 
+	var/was_fed = FALSE //used to exit the afterattack proc if the user attacked the mouth.
+	var/soaped_ticks = 3 //Ticks of the Soaped status to grant after having your mouth cleaned out.
+
 /obj/item/soap/afterattack(atom/target, mob/user, proximity)
 	if(!proximity) return
+	if(was_fed)
+		was_fed = FALSE
+		return
+	// Allow soap to be added to a grinder without cleaning it.
+	if(istype(target, /obj/machinery/reagentgrinder))
+		return
 	//I couldn't feasibly  fix the overlay bugs caused by cleaning items we are wearing.
 	//So this is a workaround. This also makes more sense from an IC standpoint. ~Carn
 	if(user.client && (target in user.client.screen))
@@ -60,9 +69,13 @@
 		if(is_cleanable(O))
 			qdel(O)
 
+// Soaps the target human, temporarily applying a swear filter to their say command.
 /obj/item/soap/attack(mob/target as mob, mob/user as mob)
 	if(target && user && ishuman(target) && ishuman(user) && !target.stat && !user.stat && user.zone_sel &&user.zone_sel.selecting == "mouth" )
+		was_fed = TRUE
 		user.visible_message("<span class='warning'>\the [user] washes \the [target]'s mouth out with [name]!</span>")
+		var/mob/living/carbon/human/H = target
+		H.Soap(soaped_ticks)
 		return
 	..()
 

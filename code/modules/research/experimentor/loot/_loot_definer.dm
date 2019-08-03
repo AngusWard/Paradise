@@ -87,7 +87,8 @@
                     new/obj/item/discovered_tech/gene_granter(),
                     new/obj/item/discovered_tech/rapidDuplicator(),
                     new/obj/item/discovered_tech/gender_swapper(),
-                    new/obj/item/discovered_tech/container())
+                    new/obj/item/discovered_tech/container(),
+                    new/obj/item/discovered_tech/supersoap())
             if(raritylevel == RARITY_UNCOMMON)
                 return pick(
                     new/obj/item/discovered_tech/teleport(),

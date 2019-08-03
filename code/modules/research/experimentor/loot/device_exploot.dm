@@ -32,6 +32,8 @@
 	var/isinitialized = FALSE
 	// Used by one-use items to render them inactive.
 	var/used = FALSE
+	// Determines whether the device manages its own cooldown or uses the standard type.
+	var/customcooldown = FALSE
 
 	var/list/keywords = list("clowns")
 	var/use_generated_names = TRUE
@@ -53,10 +55,9 @@
 		to_chat(user, "<span class='warning'>The [src] does not react!</span>")
 		return
 	else if(src.loc == user)
-		cooldown = TRUE
 		itemproc(user)
-		spawn(cooldownMax)
-			cooldown = FALSE
+		if(!customcooldown)
+			setCooldown()
 
 /obj/item/discovered_tech/proc/initialize()
 	cooldownMax = round(rand(150,300)*(1.4-0.2*raritylevel)*(1.4-0.2*(stability/20)),1)
@@ -67,6 +68,12 @@
 		origin_tech += "abductor=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
 
 /obj/item/discovered_tech/proc/itemproc(mob/user)
+	return
+
+/obj/item/discovered_tech/proc/setCooldown()
+	cooldown = TRUE
+	spawn(cooldownMax)
+		cooldown = FALSE
 	return
 
 /obj/item/discovered_tech/proc/warn_admins(mob/user, ItemType, priority = 1)
@@ -708,6 +715,7 @@
 	C.icon = icon
 	C.potency = potency
 	C.icon_state = icon_state
+	C.w_class = WEIGHT_CLASS_NORMAL
 	C.pop()
 	to_chat(user, "<span class='notice'>You fiddle with the [name] and a hatch springs open. There appears to be a hollow inside!</span>")
 	warn_admins(user, "Container", 0)
@@ -728,6 +736,43 @@
 			reagents.add_reagent(R, potency/5+(rand(0,20)-10))
 		else
 			reagents.add_reagent(R, potency+(rand(0,20)-10))
+
+// Super Soap (Common)
+// It acts at roughly the speed of syndicate soap (up to instant at max potency), but doesn't slip. If used to attack a target's mouth,
+// prevents them from swearing for a while (~2 minutes). The anti-swearing function has a 2 minute cooldown to prevent abuse.
+/obj/item/discovered_tech/supersoap/initialize()
+	origin_tech += "materials=[1+raritylevel+rand(raritylevel,raritylevel+1)];"
+	keywords = list("destruction")
+	extra_data_obj = new/obj/item/soap/syndie()
+	customcooldown = TRUE
+	cooldownMax = 1200
+	var/obj/item/soap/S = extra_data_obj
+	S.name = name
+	S.cleanspeed = 20-round(potency/5, 1)
+	S.soaped_ticks = 60 // 2 minutes
+
+/obj/item/discovered_tech/supersoap/afterattack(atom/target, mob/user, proximity)
+	if(!isinitialized)
+		initialize()
+	if(extra_data)
+		extra_data = FALSE
+		return
+	var/obj/item/soap/S = extra_data_obj
+	S.afterattack(target, user, proximity)
+
+/obj/item/discovered_tech/supersoap/attack(mob/target as mob, mob/user as mob)
+	if(!isinitialized)
+		initialize()
+	if (target && user && ishuman(target) && ishuman(user) && !target.stat && !user.stat && user.zone_sel &&user.zone_sel.selecting == "mouth" )
+		if(!cooldown)
+			var/obj/item/soap/S = extra_data_obj
+			S.attack(target, user)
+			setCooldown()
+			extra_data = TRUE
+
+
+
+
 
 
 

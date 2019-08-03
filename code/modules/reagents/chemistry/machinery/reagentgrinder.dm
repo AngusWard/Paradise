@@ -51,7 +51,10 @@
 			//All types that you can put into the grinder to transfer the reagents to the beaker. !Put all recipes above this.!
 			/obj/item/slime_extract = list(),
 			/obj/item/reagent_containers/food = list(),
-			/obj/item/reagent_containers/honeycomb = list()
+			/obj/item/reagent_containers/honeycomb = list(),
+
+			//Other items that don't contain reagents but can be ground into them anyway.
+			/obj/item/soap = list("soap" = 20)
 	)
 
 	var/list/juice_items = list (
@@ -447,3 +450,16 @@
 				O.reagents.trans_to(beaker, amount)
 				if(!O.reagents.total_volume)
 						remove_object(O)
+
+		//Any remaining compatible items (just soap for now)
+		for(var/obj/item/O in holdingitems)
+				var/allowed = get_allowed_by_id(O)
+				if(beaker.reagents.total_volume >= beaker.reagents.maximum_volume)
+						break
+				for(var/r_id in allowed)
+						var/space = beaker.reagents.maximum_volume - beaker.reagents.total_volume
+						var/amount = allowed[r_id]
+						beaker.reagents.add_reagent(r_id,min(amount, space))
+						if(space < amount)
+								break
+				holdingitems.Remove(O)

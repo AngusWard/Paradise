@@ -55,6 +55,8 @@
 			Your character is unable to breathe.
 	*	Paralysis				*
 			Your character is knocked out.
+	*	Soaped				*
+			Your mouth has been washed out. You can't say any swear words!
 	* Silent					*
 			Your character is unable to speak.
 	*	Sleeping				*
@@ -121,6 +123,7 @@
 	var/sleeping = 0
 	var/slowed = 0
 	var/slurring = 0
+	var/soaped = 0
 	var/stunned = 0
 	var/stuttering = 0
 	var/weakened = 0
@@ -393,6 +396,18 @@
 /mob/living/AdjustCultSlur(amount, bound_lower = 0, bound_upper = INFINITY)
 	var/new_value = directional_bounded_sum(cultslurring, amount, bound_lower, bound_upper)
 	SetCultSlur(new_value)
+
+// SOAPED
+
+/mob/living/proc/Soap(amount)
+	SetSoaped(max(soaped, amount))
+
+/mob/living/proc/SetSoaped(amount)
+	soaped = max(amount, 0)
+
+/mob/living/proc/AdjustSoaped(amount, bound_lower = 0, bound_upper = INFINITY)
+	var/new_value = directional_bounded_sum(soaped, amount, bound_lower, bound_upper)
+	SetSoaped(new_value)
 
 // STUN
 

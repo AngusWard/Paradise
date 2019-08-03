@@ -679,3 +679,24 @@
 
 	if(H.dna.species.bodyflags & HAS_SKIN_COLOR) //take current alien color and darken it slightly
 		H.change_skin_color("#9B7653")
+
+// Inflicts the "soaped" status when ingested. Also cleans floors and people!
+/datum/reagent/space_cleaner/soap
+	name = "Soap"
+	id = "soap"
+	description = "Your mother warned you."
+	color = "#FFFFFF"
+	taste_message = "shame"
+
+/datum/reagent/space_cleaner/soap/on_mob_life(mob/living/M)
+	M.Soap(2)
+
+/datum/reagent/space_cleaner/soap/reaction_mob(mob/living/M, method=TOUCH, reac_volume, show_message = 1)
+	if(ishuman(M))
+		if(method == TOUCH)
+			..()
+		if(method == INGEST)
+			if(show_message)
+				to_chat(M, "<span class='warning'>Shame and guilt overwhelms you!</span>")
+	
+

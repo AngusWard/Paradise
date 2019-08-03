@@ -312,6 +312,10 @@
 		do_jitter_animation(jitteriness)
 		AdjustJitter(-restingpwr)
 
+	//Soaped
+	if(soaped)
+		AdjustSoaped(-1)
+
 	if(hallucination)
 		spawn handle_hallucinations()
 
