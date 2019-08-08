@@ -345,7 +345,7 @@
 		var/obj/item/D = LootDefiner.forcedefine(experimentor_force_type, experimentor_force_name, experimentor_force_desc, experimentor_force_icon)
 		experimentor_force_type = null
 		return D
-	return LootDefiner.define(T.stability, T.potency, T.unpacked_name, rarity, T.containedtype)
+	return LootDefiner.define(T.stability, T.potency, T.unpacked_name, rarity, T.containedtype, T.icon_state)
 
 // Admin Stuff
 /obj/machinery/r_n_d/experimentor/proc/warn_admins(mob/user, var/procname, priority = 1)

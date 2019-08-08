@@ -27,7 +27,7 @@
 /obj/item/unknown_tech
 	name = "Unknown Tech"
 	desc = "An unknown piece of technology. You get a strong feeling that this a glitch in the universe and shouldn't exist."
-	icon = 'icons/obj/assemblies.dmi'
+	icon = 'icons/obj/strangeobjects.dmi'
 	var/unpacked_name = "Unknown"
 	var/stability
 	var/potency
@@ -35,7 +35,7 @@
 	var/flexibility
 	var/containedtype
 	var/list/typelist = list("Device", "Device", "Device")
-	var/list/iconlist = list("shock_kit","armor-igniter-analyzer","infra-igniter0","infra-igniter1","radio-multitool","prox-radio1","radio-radio","timer-multitool0","radio-igniter-tank")
+	var/list/iconlist = list("SOBJ_GUNRADAR", "SOBJ_PAINTRAIN", "SOBJ_RINGRING", "SOBJ_GNIRGNIR", "SOBJ_BRB", "SOBJ_SRB", "SOBJ_BOPIT", "SOBJ_SKTRBUG", "SOBJ_PROBE", "SOBJ_BCHIP", "SOBJ_SCHIP", "SOBJ_TEENY", "SOBJ_PLANDAR", "SOBJ_DBLFLSH", "SOBJ_MTRD", "SOBJ_FIGTCUFF", "SOBJ_RMT", "SOBJ_MTLPIG")
 	var/stability_standardeviation = 15
 	var/stability_mean = 50
 	var/potency_standardeviation = 15
@@ -113,14 +113,14 @@
 	name = "Prototype Technology"
 	desc = "An unknown piece of technology stamped with the NanoTrasen logo. Clearly not production ready, it was probably left by a previous shift."
 	unpacked_name = "Prototype"
-	icon = 'icons/obj/assemblies.dmi'
+	icon = 'icons/obj/strangeobjects.dmi'
 
 // Spawns rarely in maintenance. TODO - Once weapons/armor start showing up, weight the type list to favor them.
 /obj/item/unknown_tech/myst_tech/
 	name = "Mysterious Technology"
 	desc = "An unknown piece of technology stamped only with a strange barcode. The tooling is clearly different from in-house."
 	unpacked_name = "Mysterious"
-	icon = 'icons/obj/assemblies.dmi'
+	icon = 'icons/obj/strangeobjects.dmi'
 	rare_weighting = 4
 	vrare_weighting = 2
 	stability_standardeviation = 10
@@ -137,7 +137,7 @@
 	name = "Alien Technology"
 	desc = "An unknown piece of technology stamped with lettering in no recognizable language. The make is unlike any you've ever seen."
 	unpacked_name = "Alien"
-	icon = 'icons/obj/assemblies.dmi'
+	icon = 'icons/obj/strangeobjects.dmi'
 	rare_weighting = 10
 	vrare_weighting = 20
 	stability_standardeviation = 10

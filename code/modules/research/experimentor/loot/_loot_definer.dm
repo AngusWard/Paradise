@@ -27,15 +27,18 @@
     var/raritylevel = 1
     var/box_type = "Unknown"
     var/item_category = "Device"
+    var/icon_state
     var/obj/item/discovered_tech/loot_item
 
 // Returns a finished item from the stats supplied to the experimentor.
-/datum/experimentor/loot_definer/proc/define(var/stability_in, var/potency_in, var/base_name, var/rare_level, var/itemcategory)
+/datum/experimentor/loot_definer/proc/define(var/stability_in, var/potency_in, var/base_name, var/rare_level, var/itemcategory, var/iconstate)
 	stability = stability_in
 	potency = potency_in
 	raritylevel = rare_level
 	box_type = base_name
 	item_category = itemcategory
+	if(iconstate != null)
+		icon_state = iconstate
 
     // determine what specific type (itemtype) the item is based on.
 	loot_item = findItemType()
@@ -48,6 +51,8 @@
 	if(raritylevel == RARITY_VERYRARE)
 		var/turf/T = get_turf(loot_item)
 		message_admins("The experimentor rolled a VERY RARE item of type [loot_item.type] at ([T.x], [T.y], [T.z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[T.x];Y=[T.y];Z=[T.z]'>JMP</a>)",0,1)
+	if(icon_state != null)
+		loot_item.icon_state = icon_state
 	return loot_item
 
 // If an admin messes with the experimentor, it will use this proc instead.

@@ -12,10 +12,10 @@
 /obj/item/discovered_tech
 	name = "Discovered Technology"
 	desc = "A strange device. Its function is not immediately apparent."
-	icon = 'icons/obj/assemblies.dmi'
+	icon = 'icons/obj/strangeobjects.dmi'
 	origin_tech = "combat=1;plasmatech=1;powerstorage=1;materials=1"
-	icon_state = "shock_kit"
-	var/list/iconlist = list("shock_kit","armor-igniter-analyzer","infra-igniter0","infra-igniter1","radio-multitool","prox-radio1","radio-radio","timer-multitool0","radio-igniter-tank")
+	icon_state = "SOBJ_MTRD"
+	var/list/iconlist = list("SOBJ_GUNRADAR", "SOBJ_PAINTRAIN", "SOBJ_RINGRING", "SOBJ_GNIRGNIR", "SOBJ_BRB", "SOBJ_SRB", "SOBJ_BOPIT", "SOBJ_SKTRBUG", "SOBJ_PROBE", "SOBJ_BCHIP", "SOBJ_SCHIP", "SOBJ_TEENY", "SOBJ_PLANDAR", "SOBJ_DBLFLSH", "SOBJ_MTRD", "SOBJ_FIGTCUFF", "SOBJ_RMT", "SOBJ_MTLPIG")
 	var/cooldownMax = 60
 	var/cooldown = FALSE
 	// When spawned in, they'll have average (50) stats and an uncommon rarity level
