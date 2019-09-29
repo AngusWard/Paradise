@@ -183,6 +183,27 @@
 
 	return 1
 
+/obj/item/borg/upgrade/integrator
+	name = "mining cyborg integration subsystem"
+	desc = "A modular interface for integrating materials into a cyborg chassis. Comes with a free survival knife!"
+	icon_state = "cyborg_upgrade1"
+	origin_tech = "engineering=2;materials=2"
+	require_module = 1
+	module_type = /obj/item/robot_module/miner
+
+/obj/item/borg/upgrade/integrator/action(mob/living/silicon/robot/R)
+	if(..())
+		return
+	for(var/obj/item/kitchen/knife/combat/survival in R.module.modules)
+		to_chat(R, "<span class='notice'>An integrator is already installed!</span>")
+		to_chat(usr, "<span class='notice'>There's no room for another integrator!</span>")
+		return
+	
+	R.module.modules += new /obj/item/kitchen/knife/combat/survival(R.module)
+	R.integrator = 1
+	R.module.rebuild()
+	return 1
+
 /obj/item/borg/upgrade/syndicate
 	name = "illegal equipment module"
 	desc = "Unlocks the hidden, deadlier functions of a cyborg. Also prevents emag subversion."

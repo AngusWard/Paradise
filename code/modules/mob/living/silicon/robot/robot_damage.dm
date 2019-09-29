@@ -136,7 +136,11 @@
 	if(status_flags & GODMODE)	return	//godmode
 	var/list/datum/robot_component/parts = get_damageable_components()
 
-	 //Combat shielding absorbs a percentage of damage directly into the cell.
+	// Damage multipliers (only used by mining borgs with goliath plates)
+	brute = brute * brute_multiplier
+	burn = burn * burn_multiplier
+
+	//Combat shielding absorbs a percentage of damage directly into the cell.
 	var/obj/item/borg/combat/shield/shield
 	if(module_state_1 && istype(module_state_1, /obj/item/borg/combat/shield))
 		shield = module_state_1

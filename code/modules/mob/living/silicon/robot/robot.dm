@@ -100,6 +100,11 @@ var/list/robot_verbs_default = list(
 	var/ionpulse_on = 0 // Jetpack-like effect.
 	var/datum/effect_system/trail_follow/ion/ion_trail // Ionpulse effect.
 
+	//Basic defenses, just for mining (goliath hides) right now, may be expanded later.
+	var/brute_multiplier = 1
+	var/burn_multiplier = 1
+	var/integrator = 0
+
 	var/datum/action/item_action/toggle_research_scanner/scanner = null
 	var/list/module_actions = list()
 
@@ -441,6 +446,9 @@ var/list/robot_verbs_default = list(
 	speed = 0 // Remove upgrades.
 	ionpulse = FALSE
 	magpulse = FALSE
+	brute_multiplier = 1
+	burn_multiplier = 1
+	integrator = 0
 	add_language("Robot Talk", 1)
 
 	status_flags |= CANPUSH
@@ -598,7 +606,7 @@ var/list/robot_verbs_default = list(
 	..(Proj)
 	if(prob(75) && Proj.damage > 0) spark_system.start()
 	return 2
-
+	
 
 /mob/living/silicon/robot/attackby(obj/item/W, mob/user, params)
 	if(opened) // Are they trying to insert something?

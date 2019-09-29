@@ -135,6 +135,21 @@ var/global/list/datum/stack_recipe/sinew_recipes = list ( \
 	layer = MOB_LAYER
 	var/static/list/can_strengthen_clothing
 
+/obj/item/stack/sheet/animalhide/goliath_hide/attack_robot(mob/living/silicon/robot/R)
+	if(R.integrator)
+		if (R.brute_multiplier <= 0.7)
+			to_chat(R, "<span class='warning'>Your chassis is as reinforced as it's going to get!</span>")
+			return
+		if(do_after_once(R, 30, target = src))
+			R.brute_multiplier -= 0.1
+			R.burn_multiplier -= 0.05
+			to_chat(R, "<span class='notice'>Tiny blades and servos carve apart [src] and integrate the strong alloy into your chassis!</span>")
+			playsound(R.loc, 'sound/items/rped.ogg', 50, 1)
+			use(1)
+			return
+	else
+		..()
+
 /obj/item/stack/sheet/animalhide/goliath_hide/Initialize(mapload)
 	. = ..()
 	if(!can_strengthen_clothing)
@@ -207,7 +222,7 @@ var/global/list/datum/stack_recipe/sinew_recipes = list ( \
 			var/obj/item/stack/sheet/hairlesshide/HS = new(usr.loc)
 			HS.amount = 1
 			src.use(1)
-	else
+	else 
 		..()
 
 //Step two - washing (also handled by water reagent code and washing machine code)
