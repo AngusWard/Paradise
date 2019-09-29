@@ -260,6 +260,10 @@
 	if(..(user, 1))
 		to_chat(user, "<span class='notice'>Occupies <b>[cost]%</b> of mod capacity.</span>")
 
+/obj/item/borg/upgrade/modkit/attack_robot(mob/living/silicon/robot/R)
+	for(var/obj/item/gun/energy/kinetic_accelerator/cyborg/KA in R.module.modules)
+		return install(KA, R)
+
 /obj/item/borg/upgrade/modkit/attackby(obj/item/A, mob/user)
 	if(istype(A, /obj/item/gun/energy/kinetic_accelerator) && !issilicon(user))
 		install(A, user)

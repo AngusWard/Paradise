@@ -8,6 +8,13 @@
 	var/obj/act_module = get_active_hand()
 	if(act_module)
 		msg += "It is holding [bicon(act_module)] \a [act_module].\n"
+	if(integrator)
+		if(brute_multiplier==0.9)
+			msg += "Its casing is flecked with traces of hard organic material."
+		else if(brute_multiplier==0.8)
+			msg += "Its casing is partially replaced by a hard organic carapace."
+		else if(brute_multiplier==0.7)
+			msg += "Its casing is fully replaced by a hard organic carapace! It looks somewhat satisfied."
 	msg += "<span class='warning'>"
 	if(getBruteLoss())
 		if(getBruteLoss() < maxHealth*0.5)
