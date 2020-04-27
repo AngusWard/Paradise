@@ -63,9 +63,24 @@
 	desc = "These cybernetic eye implants will give you X-ray vision. Blinking is futile."
 	implant_color = "#000000"
 	origin_tech = "materials=4;programming=4;biotech=6;magnets=4"
+
+/obj/item/organ/internal/cyberimp/eyes/xray/onOrganLink(var/obj/item/organ/O)
+	if(!owner || !istype(O, /obj/item/organ/internal/cyberimp/brain/xray_brain))
+		return
 	vision_flags = SEE_MOBS | SEE_OBJS | SEE_TURFS
 	see_in_dark = 8
 	lighting_alpha = LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE
+	to_chat(owner, "Status displays flicker in the corner of your vision as the co-processor boots up... you're suddenly unnaturually aware of everything around you!")
+	owner.update_sight()
+
+/obj/item/organ/internal/cyberimp/eyes/xray/onOrganUnlink(var/obj/item/organ/O)
+	if(!owner || !istype(O, /obj/item/organ/internal/cyberimp/brain/xray_brain))
+		return
+	vision_flags = initial(vision_flags)
+	see_in_dark = initial(see_in_dark)
+	lighting_alpha = initial(lighting_alpha)
+	to_chat(owner, "A single red warning indicator blinks in the corner of your vision. ERROR: Co-Processor Not Found!")
+	owner.update_sight()
 
 /obj/item/organ/internal/cyberimp/eyes/thermals
 	name = "Thermals implant"

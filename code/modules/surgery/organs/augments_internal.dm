@@ -145,6 +145,28 @@
 	spawn(90 / severity)
 		crit_fail = 0
 
+/obj/item/organ/internal/cyberimp/brain/xray_brain
+	name = "Oracle Co-Processor"
+	desc = "An advanced cranial co-processor for interpreting overwhelming amounts of sensory data. Required for the X-Ray augmentation to function."
+	var/active = FALSE
+	var/l_hand_ignore = FALSE
+	var/r_hand_ignore = FALSE
+	var/obj/item/l_hand_obj = null
+	var/obj/item/r_hand_obj = null
+	implant_color = "#0000FF"
+	slot = "brain_xray"
+	origin_tech = "materials=4;programming=6;biotech=5"
+	synergy_organ_list = list(/obj/item/organ/internal/cyberimp/eyes/xray)
+
+//If added after the eyes, act as if the eyes were added second.
+/obj/item/organ/internal/cyberimp/brain/xray_brain/onOrganLink(var/obj/item/organ/O)
+	. = ..()
+	O.onOrganLink(src)
+
+/obj/item/organ/internal/cyberimp/brain/xray_brain/onOrganUnlink(var/obj/item/organ/O)
+	. = ..()
+	O.onOrganUnlink(src)
+
 /obj/item/organ/internal/cyberimp/brain/clown_voice
 	name = "Comical implant"
 	desc = "<span class='sans'>Uh oh.</span>"

@@ -43,6 +43,7 @@
 		A.Grant(M)
 	if(vital)
 		M.update_stat("Vital organ inserted")
+	organ_synergy_search()
 
 // Removes the given organ from its owner.
 // Returns the removed object, which is usually just itself

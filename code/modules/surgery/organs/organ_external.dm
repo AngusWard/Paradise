@@ -129,6 +129,7 @@
 			if(!parent.children)
 				parent.children = list()
 			parent.children.Add(src)
+	organ_synergy_search()
 
 /obj/item/organ/external/attempt_become_organ(obj/item/organ/external/parent,mob/living/carbon/human/H)
 	if(parent_organ != parent.limb_name)

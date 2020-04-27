@@ -31,6 +31,49 @@
 	var/hidden_pain = FALSE //will it skip pain messages?
 	var/requires_robotic_bodypart = FALSE
 
+	var/list/obj/item/organ/synergy_organ_list // Lists organs that interact with each other in the body, if any.
+	var/list/obj/item/organ/linked_organs // List of actual organs that the organ is synergizing with.
+
+// Search for synergizing organs to link to, link to them and run their onOrganLink procs
+/obj/item/organ/proc/organ_synergy_search()
+	if(!owner)
+		return
+	if(!synergy_organ_list)
+		return
+	for(var/obj/item/organ/O in synergy_organ_list)
+		var/obj/item/organ/target = locate(O) in owner.internal_organs
+		if(!target)
+			target = locate(O) in owner.bodyparts
+		if(target)
+			link_organ(target)
+			target.link_organ(src)
+
+// Adds an organ to linked_organs. Will throw a runtime if the organ is not a type found in synergy_organ_list.
+/obj/item/organ/proc/link_organ(obj/item/organ/new_organ)
+	if(synergy_organ_list && new_organ.type in synergy_organ_list)
+		if(!linked_organs)
+			linked_organs = list()
+		if(!(new_organ in linked_organs))
+			linked_organs.Add(new_organ)
+			onOrganLink(new_organ)
+	else
+		log_runtime(EXCEPTION("Attempted to link to incompatible organ: [new_organ] to [src]"), src)
+	return
+
+// Place for events that happen when this organ is linked to another.
+/obj/item/organ/proc/onOrganLink(obj/item/organ/new_organ)
+	return
+
+/obj/item/organ/proc/unlink_organ(obj/item/organ/unlinked_organ)
+	if(synergy_organ_list && linked_organs && unlinked_organ in linked_organs)
+		linked_organs.Remove(unlinked_organ)
+		onOrganUnlink(unlinked_organ)
+	else
+		log_runtime(EXCEPTION("Attempted to unlink organ that isn't linked: [unlinked_organ] from [src]"), src)
+	return
+
+/obj/item/organ/proc/onOrganUnlink(obj/item/organ/unlinked_organ)
+	return
 
 /obj/item/organ/Destroy()
 	STOP_PROCESSING(SSobj, src)
@@ -288,6 +331,10 @@
 /obj/item/organ/proc/remove(var/mob/living/user,special = 0)
 	if(!istype(owner))
 		return
+
+	for(var/obj/item/organ/O in linked_organs)
+		O.unlink_organ(src)
+	linked_organs = null
 
 	owner.internal_organs -= src
 
